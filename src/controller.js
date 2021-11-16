@@ -2,33 +2,42 @@ const { connection } = require("./connector");
 
 const totalRecovered = async (req, res) => {
   try {
-    const allData = await connection.find({});
-    const recovered = allData.reduce((result, obj) => {
-      return result + obj.recovered;
-    }, 0);
-    res.status(200).json({ data: { _id: "total", recovered: recovered } });
+    const allData = await connection.aggregate([
+      {
+        $group: { _id: "total", recovered: { $sum: "$recovered" } },
+      },
+    ]);
+
+    res.status(200).json({ data: allData[0] });
   } catch (error) {
     res.status(500).json(error);
   }
 };
 const totalActive = async (req, res) => {
   try {
-    const allData = await connection.find({});
-    const active = allData.reduce((result, obj) => {
-      return result + (obj.infected - obj.recovered);
-    }, 0);
-    res.status(200).json({ data: { _id: "total", active: active } });
+    const allData = await connection.aggregate([
+      {
+        $group: {
+          _id: "total",
+          active: { $sum: { $subtract: ["$infected", "$recovered"] } },
+        },
+      },
+    ]);
+
+    res.status(200).json({ data: allData[0] });
   } catch (error) {
     res.status(500).json(error);
   }
 };
 const totalDeath = async (req, res) => {
   try {
-    const allData = await connection.find({});
-    const death = allData.reduce((result, obj) => {
-      return result + obj.death;
-    }, 0);
-    res.status(200).json({ data: { _id: "total", death: death } });
+    const allData = await connection.aggregate([
+      {
+        $group: { _id: "total", death: { $sum: "$death" } },
+      },
+    ]);
+
+    res.status(200).json({ data: allData[0] });
   } catch (error) {
     res.status(500).json(error);
   }
